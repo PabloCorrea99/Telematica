@@ -12,8 +12,8 @@ BUFFER_SIZE = 4096
 # the ip address or hostname of the server, the receiver
 host = "192.168.1.101"
 
-# the port, let's use 5001
-port = 5001
+# the port, let's use 80
+port = 80
 
 # the name of file we want to send, make sure it exists
 filename = "data.csv"
