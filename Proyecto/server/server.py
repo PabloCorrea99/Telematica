@@ -1,6 +1,7 @@
 import socket
 import os
 import tqdm
+
 # device's IP address
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 80
@@ -8,17 +9,28 @@ SERVER_PORT = 80
 BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((SERVER_HOST, SERVER_PORT))
+def startServer():
 
-s.listen(4)
-print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((SERVER_HOST, SERVER_PORT))
 
-client_socket, address = s.accept() 
+    s.listen(4)
+    print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
 
-print(f"[+] {address} is connected.")
+    client_socket, address = s.accept() 
 
-def recibirArchivo(filename,filesize):
+    print(f"[+] {address} is connected.")
+
+    received = client_socket.recv(BUFFER_SIZE).decode()
+    msg = received.split(SEPARATOR)
+    if msg[0] == "PUT":
+        recibirArchivo(msg[1],msg[2], client_socket)
+    elif msg[0] == "GET":
+        pass
+
+    s.close()
+
+def recibirArchivo(filename, filesize, client_socket):
     filename = os.path.basename(filename)
     filesize = int(filesize)
     progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
@@ -36,13 +48,6 @@ def recibirArchivo(filename,filesize):
             progress.update(len(bytes_read))
     #Decidir hacia que nodo enviar
 
-received = client_socket.recv(BUFFER_SIZE).decode()
-msg = received.split(SEPARATOR)
-if msg[0] == "PUT":
-    recibirArchivo(msg[1],msg[2])
-elif msg[0] == "GET":
-    pass
 
-s.close()
 
 
