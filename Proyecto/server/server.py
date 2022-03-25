@@ -34,6 +34,7 @@ def recibirArchivo(filename,filesize):
             f.write(bytes_read)
             # update the progress bar
             progress.update(len(bytes_read))
+    #Decidir hacia que nodo enviar
 
 received = client_socket.recv(BUFFER_SIZE).decode()
 msg = received.split(SEPARATOR)
