@@ -5,7 +5,7 @@ from pathlib import Path
 
 # device's IP address
 SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8002
+REPLICATE_PORT = 8004
 # receive 4096 bytes each time
 BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
@@ -13,10 +13,10 @@ SEPARATOR = "<SEPARATOR>"
 def startServer():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((SERVER_HOST, SERVER_PORT))
+    s.bind((SERVER_HOST, REPLICATE_PORT))
 
     s.listen(4)
-    print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+    print(f"[*] Listening as {SERVER_HOST}:{REPLICATE_PORT}")
 
     client_socket, address = s.accept() 
 
@@ -48,30 +48,7 @@ def processFile(filename, filesize, client_socket):
             f.write(bytes_read)
             # update the progress bar
             progress.update(len(bytes_read))
-
         f.close()
-    replicate(filename, filesize, filename_direction)
-
-def replicate(filename, filesize, filename_direction):
-    replicate_nodes = [8003, 8004]
-    host = "127.0.0.1"
-    for port in replicate_nodes:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print(f"[+] Connecting to {host}:{port}")
-        s.connect((host, port))
-        print("[+] Connected.")
-        s.send(f"PUT{SEPARATOR}{filename}{SEPARATOR}{filesize}".encode())
-        with open(filename_direction, "rb") as f:
-            while True:
-                # read the bytes from the file
-                bytes_read = f.read(BUFFER_SIZE)
-                if not bytes_read:
-                    # file transmitting is done
-                    break
-                # we use sendall to assure transimission in 
-                # busy networks
-                s.sendall(bytes_read)
-            f.close()
 
 
 startServer()

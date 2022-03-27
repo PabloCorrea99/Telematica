@@ -1,3 +1,5 @@
+from Node import Node
+
 class HashTable:
   
     # Create empty bucket list of given size
@@ -14,7 +16,8 @@ class HashTable:
         # Get the index from the key
         # using hash function
         hashed_key = hash(key) % self.size
-          
+        node = Node(hashed_key)
+        print(node.value)
         # Get the bucket corresponding to index
         bucket = self.hash_table[hashed_key]
   
@@ -35,6 +38,8 @@ class HashTable:
             bucket[index][1].append(val)
         else:
             bucket.append((key, [val]))
+
+        return node
   
     # Return searched value with specific key
     def get_val(self, key):
@@ -42,7 +47,7 @@ class HashTable:
         # Get the index from the key using
         # hash function
         hashed_key = hash(key) % self.size
-          
+        print(hashed_key)
         # Get the bucket corresponding to index
         bucket = self.hash_table[hashed_key]
   
@@ -62,7 +67,7 @@ class HashTable:
         if found_key:
             return record_val
         else:
-            return "No record found"
+            return "N/A"
   
     # Remove a value with specific key
     def delete_val(self, key):
@@ -90,28 +95,3 @@ class HashTable:
     # To print the items of hash map
     def __str__(self):
         return "".join(str(item) for item in self.hash_table)
-  
-  
-hash_table = HashTable(50)
-  
-# insert some values
-hash_table.set_val('gfg@example.com', 1)
-print(hash_table)
-print()
-
-# insert some values
-hash_table.set_val('gfg@example.com', 'otro valor')
-print(hash_table)
-print()
-  
-hash_table.set_val('portal@example.com', 'some other value')
-print(hash_table)
-print()
-  
-# search/access a record with key
-print(hash_table.get_val('portal@example.com'))
-print()
-  
-# delete or remove a value
-hash_table.delete_val('portal@example.com')
-print(hash_table)
