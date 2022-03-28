@@ -12,8 +12,7 @@ BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
 NODOS_DIR = Path(__file__).resolve().parent.parent
 
-def startServer():
-    hash_table = HashTable(150)
+def startSockets(hash_table):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((SERVER_HOST, SERVER_PORT))
@@ -30,6 +29,10 @@ def startServer():
     if msg[0] == "PUT":
         processFile(msg[1],msg[2], client_socket, hash_table)
     elif msg[0] == "GET":
+        getFile(msg[1], client_socket, hash_table)
+    elif msg[0] == "EXIT":
+        exit(0)
+    elif msg[0] == "DELETE":
         pass
 
     s.close()
@@ -38,7 +41,6 @@ def processFile(filename, filesize, client_socket, hash_table):
     temp_key = filename.split(".")[0]
     node = hash_table.set_val(temp_key, filename)
     print(hash_table)
-    print(node.value)
     filename_direction = os.path.basename(filename)
     filesize = int(filesize)
     progress = tqdm.tqdm(range(filesize), f"Receiving {filename_direction}", unit="B", unit_scale=True, unit_divisor=1024)
@@ -57,6 +59,27 @@ def processFile(filename, filesize, client_socket, hash_table):
     #Decidir hacia que nodo enviar
     write_into_node(node, filename, filesize, filename_direction)
 
+def getFile(filename, client_socket, hash_table):
+    temp_key = filename.split(".")[0]
+    filename, node = hash_table.get_val(temp_key)
+    method = "GET"
+    port, host = calc_node(node.value)# Decides which node to search the object
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print(f"[+] Connecting to {host}:{port}")
+    s.connect((host, port))
+    print("[+] Connected.")
+    s.send(f"{method}{SEPARATOR}{filename}{SEPARATOR}".encode())
+    while True:
+        bytes_read = s.recv(BUFFER_SIZE)
+        if not bytes_read:    
+            # nothing is received
+            # file transmitting is done
+            break
+        client_socket.sendall(bytes_read)
+
+    s.close()
+
+
 def calc_node(node):
     host = SERVER_HOST
     if(node == "1"):
@@ -72,12 +95,13 @@ def calc_node(node):
     return port, host
 
 def write_into_node(node, filename, filesize, filename_direction):
+    method = "PUT"
     port, host = calc_node(node.value)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print(f"[+] Connecting to {host}:{port}")
     s.connect((host, port))
     print("[+] Connected.")
-    s.send(f"PUT{SEPARATOR}{filename}{SEPARATOR}{filesize}".encode())
+    s.send(f"{method}{SEPARATOR}{filename}{SEPARATOR}{filesize}{SEPARATOR}".encode())
     with open(filename_direction, "rb") as f:
         while True:
             # read the bytes from the file
@@ -90,6 +114,11 @@ def write_into_node(node, filename, filesize, filename_direction):
             s.sendall(bytes_read)
         f.close()
     os.remove(filename_direction) 
+
+def startServer():
+    hash_table = HashTable(150)
+    while True:
+        startSockets(hash_table)
 
 startServer()
 

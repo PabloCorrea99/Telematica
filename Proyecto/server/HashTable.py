@@ -48,6 +48,8 @@ class HashTable:
         # hash function
         hashed_key = hash(key) % self.size
         print(hashed_key)
+        node = Node(hashed_key)
+        print(node.value)
         # Get the bucket corresponding to index
         bucket = self.hash_table[hashed_key]
   
@@ -64,8 +66,9 @@ class HashTable:
         # If the bucket has same key as the key being searched,
         # Return the value found
         # Otherwise indicate there was no record found
+        print("ESTE ES EL VALUE: ",record_val)
         if found_key:
-            return record_val
+            return record_val, node
         else:
             return "N/A"
   

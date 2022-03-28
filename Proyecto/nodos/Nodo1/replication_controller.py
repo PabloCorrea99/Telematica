@@ -10,7 +10,7 @@ REPLICATE_PORT = 8003
 BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
 
-def startServer():
+def startSockets():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((SERVER_HOST, REPLICATE_PORT))
@@ -25,15 +25,19 @@ def startServer():
     received = client_socket.recv(BUFFER_SIZE).decode()
     msg = received.split(SEPARATOR)
     if msg[0] == "PUT":
-        processFile(msg[1],msg[2], client_socket)
+        processFile(msg[1],msg[2],msg[3], client_socket)
     elif msg[0] == "GET":
+        pass
+    elif msg[0] == "EXIT":
+        exit(0)
+    elif msg[0] == "DELETE":
         pass
 
     s.close()
 
-def processFile(filename, filesize, client_socket):
-
-    filename_direction = os.path.basename(filename)
+def processFile(filename, filesize, replication_dir, client_socket):
+    print("REPLICATION ",filename, filesize)
+    filename_direction = replication_dir+os.path.basename(filename)
     filesize = int(filesize)
     progress = tqdm.tqdm(range(filesize), f"Receiving {filename_direction}", unit="B", unit_scale=True, unit_divisor=1024)
     with open(filename_direction, "wb") as f:
@@ -50,5 +54,9 @@ def processFile(filename, filesize, client_socket):
             progress.update(len(bytes_read))
         f.close()
 
+
+def startServer():   
+    while True:
+        startSockets()
 
 startServer()
