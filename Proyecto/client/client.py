@@ -55,6 +55,17 @@ def getFile():
         
     s.close()
 
+def deleteKey():
+    method = "DELETE"
+    object_key = input("Type the file name: ")
+    print(f"[+] Connecting to {host}:{port}")
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
+    print("[+] Connected.")
+    s.send(f"{method}{SEPARATOR}{object_key}{SEPARATOR}".encode())
+    print(s.recv(BUFFER_SIZE))        
+    s.close()
+
 def menu():
     run_client = True
     while(run_client):
@@ -69,6 +80,8 @@ def menu():
                 sendFile()
             elif ( opcion == 2):
                 getFile()
+            elif ( opcion == 3):
+                deleteKey()
                 
             elif(opcion == 4):
                 run_client = False

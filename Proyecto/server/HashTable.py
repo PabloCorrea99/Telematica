@@ -74,11 +74,10 @@ class HashTable:
   
     # Remove a value with specific key
     def delete_val(self, key):
-        
+        key_deleted = False
         # Get the index from the key using
         # hash function
         hashed_key = hash(key) % self.size
-          
         # Get the bucket corresponding to index
         bucket = self.hash_table[hashed_key]
   
@@ -92,8 +91,9 @@ class HashTable:
                 found_key = True
                 break
         if found_key:
+            key_deleted = True
             bucket.pop(index)
-        return
+        return key_deleted
   
     # To print the items of hash map
     def __str__(self):

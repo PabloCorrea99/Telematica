@@ -33,7 +33,7 @@ def startSockets(hash_table):
     elif msg[0] == "EXIT":
         exit(0)
     elif msg[0] == "DELETE":
-        pass
+        deleteFile(msg[1], client_socket, hash_table)
 
     s.close()
 
@@ -79,6 +79,28 @@ def getFile(filename, client_socket, hash_table):
 
     s.close()
 
+def deleteFile(filename, client_socket, hash_table):
+    temp_key = filename.split(".")[0]
+    filename, node = hash_table.get_val(temp_key)
+    key_deleted = hash_table.delete_val(temp_key)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if key_deleted == True:
+        method = "DELETE"
+        port, host = calc_node(node.value)# Decides which node to search the object
+        print(f"[+] Connecting to {host}:{port}")
+        s.connect((host, port))
+        print("[+] Connected.")
+        s.send(f"{method}{SEPARATOR}{filename}{SEPARATOR}".encode())
+        while True:
+            bytes_read = s.recv(BUFFER_SIZE)
+            if not bytes_read:    
+                # nothing is received
+                # file transmitting is done
+                break
+            client_socket.sendall(bytes_read)
+    else:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.close()
 
 def calc_node(node):
     host = SERVER_HOST
