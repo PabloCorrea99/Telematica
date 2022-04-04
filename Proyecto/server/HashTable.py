@@ -66,7 +66,6 @@ class HashTable:
         # If the bucket has same key as the key being searched,
         # Return the value found
         # Otherwise indicate there was no record found
-        print("ESTE ES EL VALUE: ",record_val)
         if found_key:
             return record_val, node
         else:

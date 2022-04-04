@@ -3,6 +3,7 @@ import os
 import tqdm
 from pathlib import Path
 from HashTable import HashTable
+import ast
 
 # device's IP address
 SERVER_HOST = "127.0.0.1"
@@ -81,25 +82,30 @@ def getFile(filename, client_socket, hash_table):
 
 def deleteFile(filename, client_socket, hash_table):
     temp_key = filename.split(".")[0]
+    print("ESTA ES LA KEY: ", temp_key)
     filename, node = hash_table.get_val(temp_key)
     key_deleted = hash_table.delete_val(temp_key)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if key_deleted == True:
-        method = "DELETE"
-        port, host = calc_node(node.value)# Decides which node to search the object
-        print(f"[+] Connecting to {host}:{port}")
-        s.connect((host, port))
-        print("[+] Connected.")
-        s.send(f"{method}{SEPARATOR}{filename}{SEPARATOR}".encode())
-        while True:
-            bytes_read = s.recv(BUFFER_SIZE)
-            if not bytes_read:    
-                # nothing is received
-                # file transmitting is done
-                break
-            client_socket.sendall(bytes_read)
+        try:
+            method = "DELETE"
+            port, host = calc_node(node.value)# Decides which node to search the object
+            print(f"[+] Connecting to {host}:{port}")
+            s.connect((host, port))
+            print("[+] Connected.")
+            s.send(f"{method}{SEPARATOR}{filename[0]}{SEPARATOR}".encode())
+            while True:
+                bytes_read = s.recv(BUFFER_SIZE)
+                if not bytes_read:    
+                    # nothing is received
+                    # file transmitting is done
+                    break
+                client_socket.sendall(bytes_read)
+        except Exception as e:
+            print(e)
     else:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.sendall(b"NO HAY LLAVE PARA ELIMINAR")
+
     s.close()
 
 def calc_node(node):
@@ -136,6 +142,7 @@ def write_into_node(node, filename, filesize, filename_direction):
             s.sendall(bytes_read)
         f.close()
     os.remove(filename_direction) 
+    s.close()
 
 def startServer():
     hash_table = HashTable(150)

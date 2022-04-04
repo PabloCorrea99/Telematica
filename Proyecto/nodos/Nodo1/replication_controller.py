@@ -31,7 +31,7 @@ def startSockets():
     elif msg[0] == "EXIT":
         exit(0)
     elif msg[0] == "DELETE":
-        pass
+        deleteFile(msg[1],msg[2], client_socket)
 
     s.close()
 
@@ -53,6 +53,15 @@ def processFile(filename, filesize, replication_dir, client_socket):
             # update the progress bar
             progress.update(len(bytes_read))
         f.close()
+
+def deleteFile(filename, replication_dir, client_socket):
+    filename_direction = replication_dir+os.path.basename(filename)
+    print("REPLICATION DELETION",filename)
+    try:
+        os.remove(filename_direction)
+        client_socket.sendall(b"SE ELEMINO CORRECTAMENTE EN LA REPLICA")
+    except Exception as e:
+        print(e)
 
 
 def startServer():   

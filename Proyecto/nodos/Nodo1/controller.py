@@ -31,7 +31,7 @@ def startSockets():
     elif msg[0] == "EXIT":
         exit(0)
     elif msg[0] == "DELETE":
-        pass
+        deleteFile(msg[1], client_socket)
 
     s.close()
 
@@ -45,6 +45,7 @@ def processFile(filename, filesize, client_socket):
             while True:
                 # read 1024 bytes from the socket (receive)
                 bytes_read = client_socket.recv(BUFFER_SIZE)
+                print("DATOS: ", bytes_read)
                 if not bytes_read:    
                     # nothing is received
                     # file transmitting is done
@@ -56,6 +57,17 @@ def processFile(filename, filesize, client_socket):
 
             f.close()
         replicate(filename, filesize, filename_direction)
+    
+    except Exception as e:
+        print(e)
+
+def deleteFile(filename, client_socket):
+    print("ELIMINANDO NODO1: ",filename)
+    try:
+        filename_direction = "Almacenamiento/"+os.path.basename(filename)
+        os.remove(filename_direction)
+        client_socket.sendall(b"SE ELIMINO CORRECTAMENTE!")
+        replicateDeletion(filename, filename_direction, client_socket)
     
     except Exception as e:
         print(e)
@@ -104,6 +116,39 @@ def replicate(filename, filesize, filename_direction):
                 # busy networks
                 s.sendall(bytes_read)
             f.close()
+
+def replicateDeletion(filename,filename_direction, client_socket):
+    method = "DELETE"
+    print("DIRECCION PARA REPLICAR ", filename_direction)
+    replicate_nodes = [{"port":8004, "node":"ReplicacionNodo1/"}, {"port":8005, "node":"ReplicacionNodo1/"}]
+    host = "127.0.0.1"
+    for replica in replicate_nodes:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print(f"[+] Connecting to {host}:{replica['port']}")
+            s.connect((host, replica['port']))
+            print("[+] Connected.")
+            print(f"{method}{SEPARATOR}{filename}{SEPARATOR}")
+            s.send(f"{method}{SEPARATOR}{filename}{SEPARATOR}{replica['node']}{SEPARATOR}".encode())
+            print("PASAMOS EL SEND")
+            while True:
+                try:
+                    print("ESTAMOS EN EL WHILE")
+                    # read the bytes from the file
+                    bytes_read = s.recv(BUFFER_SIZE)
+                    print(bytes_read)
+                    if not bytes_read:
+                        # file transmitting is done
+                        break
+                    # we use sendall to assure transimission in 
+                    # busy networks
+                    client_socket.sendall(bytes_read)
+                except Exception as inst:
+                    print(inst)
+            print("YA VOY A CERRAR LA CONEXION CON: ", replica['port'])
+        
+        except Exception as e:
+            print(e)
 
 def startServer():   
     while True:
