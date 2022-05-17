@@ -31,7 +31,7 @@ Juan Pablo Leal Jaramillo
 ### Certificados de seguridad:
 ### Servicios utilizados en AWS:
 #### VPC:
-![Alt text](/Proyecto2/img/vpc_creation.jpg "Title")
+![Alt text](/Proyecto2/img/vpc_creation.jpg "vpc_creation")
 #### EC2:
 **Instancia base de datos:**  
 Para la configuración de la instancia de la base de datos primero se instaló el motor de base de datos dentro de la instancia que en este caso fue MongoDB y se corrieron estos comandos.
