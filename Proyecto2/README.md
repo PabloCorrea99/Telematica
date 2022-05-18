@@ -24,16 +24,38 @@ Juan Pablo Leal Jaramillo
 - Para el uso del auto escalamiento se utilizó la herramienta de AWS Auto Scaling Group que permite manejar las instancias necesarias para poder controlar la carga de la aplicación.
 
 ## Arquitectura:
+![Alt text](/Proyecto2/img/architecture.png "architecture")
+https://lucid.app/lucidchart/0dd85e9e-5358-44b2-ba1e-d6d227aac993/edit?invitationId=inv_f68f263f-ef5f-4e34-8939-9f755543afa7
 
 ## Proceso de instalación:
 ### DNS:
+[LB-BSFront-561551121.us-east-1.elb.amazonaws.com](LB-BSFront-561551121.us-east-1.elb.amazonaws.com)
 ### Dominio:
-### Certificados de seguridad:
+http://www.bookstorep2.tk/
 ### Servicios utilizados en AWS:
 #### VPC:
+La creación de la VPC se realizó de la siguiente forma. Creando dos zonas de disponibilidad, dos subredes públicas, cuatro subredes privadas y una NAT gateway por cada zona de disponibilidad.  
+También se asignaron las IPs a cada una de las subredes según como se indica en la arquitectura.
 ![Alt text](/Proyecto2/img/vpc_creation.jpg "vpc_creation")
 #### EC2:
-**Instancia base de datos:**  
+**Instancia bastion host:**
+La creación de la instancia de bastion host se realizó:  
+1. Seleccionando la AMI Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type.
+2. Se seleccionó esto en la configuración de la instancia para la configuración de la vpc.
+![Alt text](/Proyecto2/img/vpc_bastion.jpg "vpc_bastion")
+3. El grupo de seguridad se creó habilitando la conexión SSH mediante MyIp.
+4. El resto de valores se dejaron por defecto y se creó la instancia.
+
+Luego de que se crearon el resto de las instancias ya se pudo realizar la conexión ingresando desde este bastion host.
+
+**Instancia base de datos:**
+La creación de la instancia de la base de datos se realizó:  
+1. Seleccionando la AMI Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type.
+2. Se seleccionó esto en la configuración de la instancia para la configuración de la vpc.
+![Alt text](/Proyecto2/img/vpc_db.jpg "vpc_db")
+3. El grupo de seguridad se creó habilitando la conexión SSH desde las IPs de las dos subredes públicas y también se habilitaron los puertos 27017 y 27039 para las IPs de las subredes privadas donde iban a estar el back y el frontend.
+4. El resto de valores se dejaron por defecto y se creó la instancia.
+
 Para la configuración de la instancia de la base de datos primero se instaló el motor de base de datos dentro de la instancia que en este caso fue MongoDB y se corrieron estos comandos.
 ```
 sudo yum install -y mongodb-org
@@ -71,5 +93,112 @@ db.createUser({
 })
 ```
 
+**Instancia backend:**
+La creación de la instancia del frontend se realizó:  
+1. Seleccionando la AMI Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type.
+2. Se seleccionó esto en la configuración de la instancia para la configuración de la vpc.
+![Alt text](/Proyecto2/img/vpc_backfront.jpg "vpc_backfront")
+3. El grupo de seguridad se creó habilitando la conexión SSH desde las IPs de las dos subredes públicas y se habilitaron los puertos 80 y 5000 para http desde cualquier IP.
+4. El resto de valores se dejaron por defecto y se creó la instancia.
+
+Dentro de la instancia se configuró git y docker para clonar el repositorio donde se tenía el backend
+```
+sudo amazon-linux-extras install docker –y
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -a -G docker ec2-user
+
+sudo yum install git –y
+```
+
+Luego de clonar el repositorio y ya dentro de la carpeta del backend se corre este comando para crear la imagen y posteriormente para correrla y dejarla corriendo.
+```
+sudo docker build -t <name> .
+sudo docker run --restart=always -dit -p 5000:5000 <name>
+```
+
+**Instancia frontend:**
+La creación de la instancia del backend se realizó:  
+1. Seleccionando la AMI Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type.
+2. Se seleccionó esto en la configuración de la instancia para la configuración de la vpc.
+![Alt text](/Proyecto2/img/vpc_backfront.jpg "vpc_backfront")
+3. El grupo de seguridad se creó habilitando la conexión SSH desde las IPs de las dos subredes públicas y se habilitó el puerto 80 para http desde la IP del bastion host.
+4. El resto de valores se dejaron por defecto y se creó la instancia.
+
+Dentro de la instancia se configuró git y docker para clonar el repositorio donde se tenía el frontend
+```
+sudo amazon-linux-extras install docker –y
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -a -G docker ec2-user
+
+sudo yum install git –y
+```
+
+Luego de clonar el repositorio y ya dentro de la carpeta del frontend se corre este comando para crear la imagen y posteriormente para correrla y dejarla corriendo.
+```
+sudo docker build -t <name> .
+sudo docker run --restart=always -dit -p 80:80 <name>
+```
+
+Como se crearon dos load balancer, uno para el front y otro para el back, desde acá en adelante se mostrará el proceso de implementación de cada servicio especificando las cosas que se utilizaron en cada uno de los dos.
+
+#### AMI:
+Para la creación de las AMI se realizó este proceso:  
+1. Se seleccionó la instancia a la cual se le quería crear la AMI y luego en Actions -> Image and Templates -> Create Image.
+2. Se definió el nombre y la descripción de la imagen.
+3. Se dio en Create Image y ya la imagen fue creada.
+
+#### Target group:
+Para la creación de los target groups se realizó este proceso:
+1. Se ingresó a Target Groups desde EC2.
+2. Se dio en crear un nuevo target group.
+3. En el target type se señaló Instances.
+4. En el target group name se definió el nombre.
+5. En el protocolo se seleccionó para el target group del backend HTTP:5000 y para el del frontend HTTP:80.
+6. En la VPC se seleccionó la VPC que se creó.
+7. En protocol version HTTP1.
+8. Se da en Next y en la siguiente página no se configuró nada y se dio click en create target group.
+
+#### Load balancer:
+Para la creación de los load balancers se realizó este proceso:
+1. Se ingresó a Load balancers desde EC2.
+2. En la configuración básica se definió el nombre y en scheme para el del backend se puso internal y en el del frontend se puso Internet facing.
+3. En Network mappings se seleccionó la VPC de Bookstore. En mappings las dos subredes públicas para el frontend y dos de las subredes privadas para el backend.
+4. Se creó un security group para el load balancer que permita tráfico http al puerto 5000 para el backend y al 80 para el frontend.
+5. En Listener se seleccionó Protocol HTTP. 5000 para el backend y 80 para el frontend.
+6. En Forward to se seleccionó el Target group que se creó previamente.
+7. Se dio en create load balancer.
+
+#### Launch template:
+Para la creación de los launch templates se siguieron estos pasos:
+1. Se ingresó a Launch templates desde EC2.
+2. Se ingresó a create launch template.
+3. En Launch template name and description se definió el nombre y la descripción y se activó la casilla de auto scaling guidance.
+4. En Launch template contents se seleccionó MyAMIs y en Owned by me se seleccionó la AMI correspondiente.
+5. En Instance Type se seleccionó t2.micro.
+6. Se dio en create launch template.
+
+#### Auto scaling group:
+Para la creación de los auto scaling groups se realizó el siguiente proceso:
+1. Se ingresó a la pestaña de auto scaling groups en EC2.
+2. Se dio en create auto scaling group.
+3. En Name se definió el nombre.
+4. En Launch template se seleccionó el launch template correspondiente que se había creado.
+5. En choose instance launch options se seleccionó la VPC de Bookstore y en Availability zones and subnets las dos subredes privadas en las que iban a estar back y frontend.
+6. En advanced options se seleccionó la opción de attach to an existing load balancer.
+7. Se seleccionó luego la opción de choose from your load balancer target groups y se seleccionó el target group correspondiente.
+8. Se marcó la casilla de enable group metrics collections within cloudwatch.
+9. Se creó un target tracking scalling policy con un target value de 60.
+10. Luego se creó un tag con el Name para cada caso de front y back.
+11. Se creo el auto scaling group
+
+Después de un momento se verificó en los Target groups que estuviera todo correcto y apareció de esta forma.
+![Alt text](/Proyecto2/img/targetgroup_healthy.jpg "targetgroup_healthy")
+
 ### Sistema de monitoreo de disponibilidad:
+Para el sistema de monitoreo de disponibilidad se utilizó la herramienta Uptime Robot. Primero se creó la cuenta y luego se da click en el botón de Add new monitor y se llena con esta información.
+![Alt text](/Proyecto2/img/monitor_creation.jpg "monitor_creation")
+Luego de que se crea el monitor y ya se tiene la aplicación corriendo se puede observar la información acerca de la disponibilidad del sistema.
+![Alt text](/Proyecto2/img/monitor_monitoring.jpg "monitor_monitoring")
 ### Análisis del costo de la solución:
