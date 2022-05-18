@@ -31,7 +31,17 @@ https://lucid.app/lucidchart/0dd85e9e-5358-44b2-ba1e-d6d227aac993/edit?invitatio
 ### DNS:
 [LB-BSFront-561551121.us-east-1.elb.amazonaws.com](LB-BSFront-561551121.us-east-1.elb.amazonaws.com)
 ### Dominio:
-http://www.bookstorep2.tk/
+https://www.bookstorep2.tk/
+### Cloudflare:
+Se utilizó Cloudflare para los certificados SSL y la CDN.  
+Lo primero que se realizó fue crear la cuenta y luego se ingresó el dominio para que el programa lo agregue.
+![Alt text](/Proyecto2/img/cloudflare_1.jpg "cloud_flare1")
+Luego se agregó el record con los valores de nuestra página que se encuentran en el load balancer.
+![Alt text](/Proyecto2/img/cloudflare_2.jpeg "cloud_flare2")
+Luego de darle continue en esta página se seleccionó la opción de check name servers.
+![Alt text](/Proyecto2/img/cloudflare_3.jpeg "cloud_flare3")  
+Luego apareció este mensaje que indicó que el proceso había sido completado con éxito y la aplicación ya cuenta con el certificado de seguridad y el CDN.
+![Alt text](/Proyecto2/img/cloudflare_4.jpeg "cloud_flare4")
 ### Servicios utilizados en AWS:
 #### VPC:
 La creación de la VPC se realizó de la siguiente forma. Creando dos zonas de disponibilidad, dos subredes públicas, cuatro subredes privadas y una NAT gateway por cada zona de disponibilidad.  
