@@ -211,3 +211,7 @@ Para el sistema de monitoreo de disponibilidad se utilizó la herramienta Uptime
 ![Alt text](/Proyecto2/img/monitor_creation.jpg "monitor_creation")
 Luego de que se crea el monitor y ya se tiene la aplicación corriendo se puede observar la información acerca de la disponibilidad del sistema.
 ![Alt text](/Proyecto2/img/monitor_monitoring.jpg "monitor_monitoring")
+
+### Estimación de costo:
+En AWS se realizó la estimación de costo basado en las características de las instancias de AWS.
+![Alt text](/Proyecto2/img/cost_Estimation.jpg "cost_estimation")
